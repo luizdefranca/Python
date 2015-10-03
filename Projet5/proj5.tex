@@ -1,0 +1,152 @@
+\documentclass{article}
+
+\usepackage[french]{babel}
+\usepackage{amsmath}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{geometry}
+
+%%%%%%%%%%%%%%%% Lengths %%%%%%%%%%%%%%%%
+\geometry{vmargin=2.3cm}
+
+%%%%%%%%%%%%%%%% Variables %%%%%%%%%%%%%%%%
+\def\projet{5}
+\def\titre{Interpolation and integration methods / Cubic splines and surface interpolation}
+\def\groupe{4}
+\def\equipe{2}
+\def\responsible{rsabir}
+\def\secretary{pgaulon}
+\def\others{anizet, ldevoir, scleriot}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%% Header %%%%%%%%%%%%%%%%
+\noindent\begin{minipage}{0.98\textwidth}
+  \vskip 0mm
+  \noindent
+  { \begin{tabular}{p{7.5cm}}
+      {\bfseries \sffamily
+        Projet n°\projet} \\
+      {\itshape \titre}
+    \end{tabular}}
+  \hfill
+  \fbox{\begin{tabular}{l}
+      {~\hfill \bfseries \sffamily Groupe n°\groupe\ - Equipe n°\equipe
+        \hfill~} \\[2mm]
+      Responsable : \responsible \\
+      Secrétaire : \secretary \\
+      Codeurs : \others
+    \end{tabular}}
+  \vskip 4mm ~
+
+  ~~~\parbox{0.95\textwidth}{\small \textit{Résumé~:} \sffamily Durant ce projet, nous avons modélisé les flux d'air que l'on peut trouver autour d'une aile d'avion. Le but était d'obtenir une carte des pressions autour de cette même aile, afin d'approximer la portance de l'aile considérée. Le point de départ était un fichier contenant quelques points définissant le contour de l'aile choisie. Avec cela, il était nécessaire d'interpoler la ligne du contour de l'aile, pour en connaître la valeur en tout point. C'est pourquoi nous avons utilisé une interpolation cubique. Cette interpolation nous a permis dans un second temps d'obtenir la longueur approchée de l'aile, par une méthode d'intégration correctement choisie. Dans un dernier temps, la longueur de l'aile permet d'accéder aux lignes représentant l'écoulement de l'air autour de l'aile, mais aussi à la vitesse de ce flux, qui est liée à la distance parcourue le long de l'aile. Enfin, comme la vitesse du flux est reliée à la pression dynamique selon le modèle de Bernoulli, on peut en extraire une carte des pressions autour de l'aile.
+ }
+  \vskip 1mm ~
+\end{minipage}
+
+%%%%%%%%%%%%%%%% Main part %%%%%%%%%%%%%%%%
+\section*{Airfoil refinment}
+La difficulté du calcul de la ligne du contour de l'aile vient du fait que nous ne connaissons les valeurs de cette fonction que pour certaines abscisses. Cette correspondance est donnée dans le fichier caractérisant l'aile, dont il est possible d'extraire les abscisses et les ordonnées, et des les ranger dans des tableaux. Il est cependant possible de calculer précisément la dérivée seconde de cette fonction sans la connaître, sur les mêmes points qui nous permettent d'avoir des informations sur la fonction. C'est ce que montre la formule de Numerical Recipes :
+\begin{center}
+    $\frac{x_j - x_{j-1}}{6}y''_{j-1} + \frac{x_{j+1}-x_{j-1}}{3}y''_j+\frac{x_{j+1}-x_j}{6}y''_{j+1} = \frac{y_{j+1}-y_j}{x_{j+1}-x_j} - \frac{y_j-y_{j-1}}{x_j - x_{j-1}}$
+\end{center}
+Cet ouvrage nous donne aussi un algorithme pour calculer ces dérivées secondes. C'est pourquoi nous ne nous attarderons pas sur cette partie.
+
+À partir de ces dérivées secondes il est maintenant possible d'approcher la fonction déterminant le contour de l'aile par interpolation cubique. L'algorithme se chargeant de ce calcul est constitué de deux parties. La première est une recherche dichotomique, qui calcule entre quelles valeurs d'abscisses se situe le x passé en paramètre. Nous connaissons ces deux valeurs, puisque ce sont des abscisses du tableau extrait. Il suffit alors de réutiliser les valeurs encadrant notre paramètre x pour calculer la valeur interpolée de la fonction en ce point. Pour garder une certaine généricité, nous créons une fonction, qui pour tout x va calculer la valeur interpolée correspondante.
+
+Nous avons essayé de calculer l'erreur relative entre les valeurs données par cette fonction, et les valeurs connues. En fait cette erreur est nulle, puisque nous construisons une fonction de telle sorte à ce quelle respecte ces valeurs. Et donc par construction, elle passe forcément par les points que nous connaissons. Ce qui est cependant intéressant, c'est l'aspect visuel de ce calcul. Par exemple, il est possible d'obtenir le contour de l'aile avec une précision donnée. Pour une précision de 1, nous recalculons exactement les mêmes points que ceux du tableau extrait, et donc l'aile est approximée par des droites entre ces points, elle est anguleuse. Cependant, avec une précision de 100, on calcule 100 points entre les abscisses connues, et on observe une aile plus arrondie. On remarque d'ailleurs que chaque portion d'aile entre les points donnés, a une certaine courbure. C'est en effet la spline calculée sur chaque intervalle de notre fonction. Il est à noter qu'il y a une courbure très importante dans la dernière spline, celle du bout arrière de l'aile. Cela vient du fait que pour calculer une spline, il faut connaître la dérivée seconde de la fonction avant et après. Sauf que pour le bout de l'aile, il est impossible d'avoir une telle valeur après le bout. Dans ce cas là, Numerical Recipes préconisait soit de connaître la dérivée première, soit de mettre une valeur nulle. Sans connaître la fonction, la dérivée première n'est accessible qu'à partir de la dérivée seconde de la fonction, donc on ne peut pas utiliser la dérivée première pour calculer la dérivée seconde. Reste alors la valeur nulle, qui est une très mauvaise approximation. D'où le résultat étrange obtenu, d'une courbure forte au bout de l'aile. Avec une plus grande précision, les fonctions sur les différents intervalles sont plus marquées, plus courbées, puisqu'on calcule 10 fois plus de valeurs. Et la courbure du bout est aussi plus accentuée. À partir de 1000, et pour des précisions supérieures, la différence n'est plus visible à l'oeil nu.
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[scale=0.3]{images/goe281_spline_preci_1000}
+  \end{center}
+  \caption{Dessin de l'interpolation du contour de l'aile avec une précision de 1000}
+\end{figure}
+
+\section*{Computing the length of plane curves}
+Pour obtenir la longueur de l'aile choisie, nécessaire à la suite de ce projet, nous devons d'abord être capables de calculer deux éléments : une dérivée et une intégrale.
+
+Pour la dérivée, nous avons choisi de réutiliser la formule décrite dans Numerical Recipes. Pour faire ce calcul, il est nécessaire de connaître certaines valeurs de la fonction en certains points, et les dérivées secondes de la fonction en ces mêmes points. Nous possédons tous ces éléments grâce aux tableaux extraits de l'aile, et grâce au calcul du tableau de dérivées secondes. Nous avons alors essayé d'implémenter un algorithme de la même manière que pour les dérivées secondes. Pour chaque intervalle, on crée une fonction calculant la dérivée première sur celui-ci grâce à la formule. Dans un second temps, nous créons une fonction générique qui pour un x donné, va choisir le bon intervalle, et renvoyer la valeur de la dérivée en ce x. Nous avons choisi de ne pas implémenter une recherche dichotomique, mais seulement un parcours du tableau, pour trouver le bon intervalle.
+
+Cependant, nous avons été confronté au problème suivant. Le calcul des dérivées sur chaque intervalle de la fonction renvoie toujours la même fonction. Ainsi, peu importe l'intervalle choisi, on obtiendra toujours la même dérivée, alors que chaque intervalle a sa propre fonction interpolée. Ainsi, pour ne pas bloquer la suite du projet, nous avons choisi d'utiliser la fonction de dérivation déjà implémentée dans la bibliothèque Scipy.
+
+Pour le calcul de l'intégrale, diverses méthodes s'offraient à nous. Nous avons choisi d'implémenter les méthodes des rectangles gauches et droits, la méthode du point du milieu, la méthode du trapèze et enfin la méthode de Simpson, afin de les comparer.
+
+Dans un premier temps, nous avons essayé de chercher à savoir en combien d'itérations ces intégrales convergeaient, sur deux fonctions données. Comme fonctions, nous avons utilisé les fonctions du contour de l'aile : extrados et intrados. Il s'avère qu'il n'y a pas une méthode meilleure que les autres, mais que chaque méthode est adaptée avec précision pour un cas particulier. Par exemple, la méthode des trapèzes sera plus adaptée pour une fonction affine. Pour un même degré de précision, 6 chiffres significatifs cohérents, il faut un ordre de 10000 itérations pour les rectangles, et un ordre de 1000 itérations pour les trapèzes. Cela en fait des fonctions peu adaptées à notre cas. Pour la partie haute de l'aile, on observe que la méthode du point du milieu est la plus adaptée, avec de l'ordre de la centaine d'itérations pour obtenir la même précision de résultat. Simpson le fait avec un ordre du millier d'itérations. Pour la partie basse de l'aile, la méthode du point du milieu et la méthode de Simpson donnent des résultats similaires en un nombre d'itération similaire, de la centaine d'itérations. C'est pour cette raison que nous allons utiliser la méthode du point du milieu dans la suite de ce projet. Il suffit alors pour calculer la longueur d'appliquer la formule du calcul de longueur d'une fonction.
+
+Cela nous amène à étudier la convergence de ces méthode. Pour cela, nous avons repris la fonction du contour de la partie haute de l'aile, et nous avons évalué la valeur calculée par l'intégrale en fonction du nombre d'itération, pour savoir au bout de combien de temps ces méthodes s'accordent, et quelle sera la plus rapide pour cette fonction.
+
+Pour quelques points, et jusqu'au moment où les fonctions s'accordent, cela donne une figure de la sorte.
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics[scale=0.3]{images/integration_convergence}
+  \end{center}
+\caption{Comparaison de la vitesse de convergence des fonctions}
+\end{figure}
+
+C'est ce qui a été expliqué précédemment, la méthode du point du milieu est plus adaptée pour cette fonction, et elle est plus rapide que les autres. Cela s'explique simplement par le fait qu'on centre un rectangle sur une valeur choisie de la fonction, qui sera la hauteur du rectangle, et le pas en sera la largeur. Cela minimise donc l'erreur commise sur l'intégrale, puisque la surface du rectangle qui est en trop sur une des parties de la courbe, est compensée par ce qu'il manque de l'autre côté du rectangle qui en minimise la valeur.
+
+Maintenant nous allons nous intéresser plus particulièrement aux comportements des méthodes d'intégration avant convergence, et après convergence. Prenons la fonction d'intrados de l'aile. Sur les premières itérations, la méthode des trapèzes renvoie exactement la même forme que la méthode des rectangles, en plus précis. En effet, la partie inclinée du trapèze est en fait la même surface que celle du rectangle, mais elle se situe toujours sous la courbe, donc plus précise. On remarque aussi que la méthode du point du milieu sous estime d'abord la surface, puis augmente au fur et à mesure. en effet, plus il y a de pas, plus il y a de rectangles centrés sur des points de la courbe, et donc plus de parties de ces rectangles compensent la sous estimation de leur symétrique. Pour la méthode de Simpson, c'est un peu moins précis, puisqu'à chaque itération, il y a une nouvelle interpolation cubique de la fonction, et donc l'avancée n'est pas régulière.
+
+Un comportement étrange se produit aussi, après que les méthodes aient convergé. Certaines valeurs sont tout à coup très élevées par rapport aux valeurs voisines. Cela vient du fait que la partie extrême de l'aile a une courbure un peu spéciale, le bord arrière de l'aile. En effet cela ne vient pas d'un type de méthode en particulier puisque toutes les méthodes sont soumises à ces sauts. Et de plus, en ne calculant la longueur que sur l'aile réduite (sans le bord arrière) cela lisse la courbe.
+
+    \begin{figure}[ht]
+      \begin{center}
+        \begin{tabular}{cc}
+          \includegraphics[scale=0.3]{images/integration_convergence_in_few_it} &
+          \includegraphics[scale=0.3]{images/integration_convergence_lot_it}
+        \end{tabular}   
+      \end{center}
+      \caption{Comportements des méthodes d'intégration avant et après convergence}
+    \end{figure}
+\newpage
+\section*{Modelling the airflow}
+
+L'objectif de cette partie est de calculer la pression dynamique autour d'une aile. Pour cela, il faut avoir recours à plusieurs étapes :
+\begin{itemize}
+\item Définir la hauteur maximale et minimale de l'aile.
+\item Déterminer la forme des courants d'air autour de l'aile.
+\item Calculer la vitesse des molécules d'air.
+\item Calculer la pression autour de l'aile et la représenter dans un graphe.
+\end{itemize}
+
+Grâce à la première partie, les hauteurs maximales et minimales ont été faciles à déterminer. Après avoir transformé l'aile en deux fonctions représentant la forme supérieure et la forme inférieure, il suffisait de chercher le maximum pour la fonction supérieure et le minimum pour la fonction inférieure.
+La forme des courbes des courants d'air est déterminée en utilisant les deux équations suivantes $f_{\lambda}(x)=(1-\lambda)f_{up}(x)+\lambda\times h_{max}\ \lambda\in[0;1]$ pour les courants d'air au dessus de l'aile et $ f_{\lambda}(x)=(1-\lambda)f_{down}(x)+\lambda\times h_{min}\ \lambda\in[0;1]$ en dessous.
+Dans ces équations, $x$ est la fonction décrivant la forme de l'aile, $f_{up}$ est la fonction obtenue de la partie supérieure de l'aile, et $f_{down}$ est la fonction obtenue de la partie inférieure de l'aile.
+
+La partie gauche de la \textit{Figure 4.} représente un test pour le programme calculant les courants d'air autour d'un profil aérospatial. Ici, le polynôme $\mathcal{P}(x)= x(x-1)$ et son symétrique par rapport à l'axe des abscisses ont été utilisés pour tester les fonctions. Ces polynômes ont été choisis pour leurs variations parfaitement symétriques sur l'intervalle $[0;1]$. On remarque sur de telles fonctions, les modifications que la présence d'un module aérien dans l'air modifie la forme des courants d'air et que cette déformation s'atténue en fonction de l'éloignement de l'aile.
+
+Ensuite, connaissant les courbes d'air, nous pouvons calculer la longueur de ces courbes et ainsi calculer la vitesse des molécules d'air appartenant à une courbe. La vitesse nous permet de calculer la pression dynamique avec $P_{d}= \frac{1}{2} \times \rho \times \mathcal{V} ^{2}$.
+Cette méthode une fois appliquée à toutes les courbes permet de déterminer la pression globale autour de l'aile.
+
+Nous avons ensuite traité le cas d'une aile réelle. Nous avons calculé son impact dans l'air et avons obtenu la \textit{Figure 4.} suivante : 
+
+\begin{figure}[ht!]
+      \begin{center}
+        \begin{tabular}{cc}
+          \includegraphics[scale=.3]{images/cas_theorique.png}  &
+          \includegraphics[scale=0.3]{images/courant_ail.png}
+        \end{tabular}   
+      \end{center}
+      \caption{Lignes de flux d'air autour d'un profil spécifique de test, et de l'aile choisie}
+    \end{figure}
+\newpage
+Ce qui est remarquable sur la partie droite de la \textit{Figure 4.}, c'est que la partie inférieure de l'aile est en général moins courbée. Ce qui a pour conséquence de moins modifier les courbes d'air dans cette zone.
+Une fois l'allure de l'air obtenue, la pression a été calculée et a été renvoyée sous forme de carte.
+\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[scale=0.3]{images/map_pressure.png}   
+  \end{center}
+  \caption{Carte des pressions dynamiques autour de l'aile}
+\end{figure}
+Cette carte représente la pression dynamique autour de l'aile. La zone en bleu foncé au milieu représente l'aile. Elle caractérisée par une pression dynamique nulle. L'échelle indique la coloration pour les pressions croissantes et en hPa. Même si ici les valeurs absolues ne sont pas réellement importantes, car il faut regarder les valeurs relatives des pressions autour de l'aile. En effet, on constate que la pression dynamique au dessus de l'aile est beaucoup plus forte que celle en dessous de l'aile. Ce qui a pour conséquence l'effet inverse au niveau des pressions statiques: $P_{s}=P-P_{d}$.
+
+Ainsi, la pression statique sera plus importante en bas de l'aile, ce qui aura comme effet de soulever l'aile et donc permettre à l'avion, en changeant sa vitesse et la directions de ses ailes, de voler.
+\section*{Conclusion}
+Il est à noter que tous les modèles que nous avons utilisés contiennent des approximations, et donc ne reflètent pas exactement la réalité. Depuis l'interpolation cubique du contour de l'aile, jusqu'à l'hypothèse d'un écoulement laminaire de l'aile, en passant par des méthodes d'intégration et de dérivation approchées, tous nos résultats sont entachés d'erreurs inhérentes au calcul numérique et à la simplification de modèles physiques. Toutefois, cela constitue une bonne approche de compréhension du phénomène et permet d'expliquer clairement comment la forme d'une aile a été pensée pour permettre à un avion de voler.
+\end{document}
