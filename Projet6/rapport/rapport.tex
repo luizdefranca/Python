@@ -1,0 +1,122 @@
+\documentclass{article}
+
+\usepackage[french]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{algorithm2e}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%% Main part %%%%%%%%%%%%%%%%
+\section{Modèles de populations}
+\subsection{Présentation des modèle}
+
+ Nous avons ici affaire à deux equations différrentiel qui ont pour but de modéliser une population d'une espèce quelconque. La première est celle de Malthus. \\
+\begin{eqnarray}
+  \frac{dN}{dt}(t) & = & b\cdot N(t)-d\cdot N(t) \nonumber & (M) \\
+  &  = & \gamma \dot N(t) \nonumber 
+\end{eqnarray}
+
+La seconde est celle de Verhulst. \\ 
+\begin{eqnarray}
+  \frac{dN}{dt}(t) & = & \gamma \cdot N(t) \cdot (1- \frac{N(t)}{K}) \nonumber & (V) 
+\end{eqnarray}
+
+\\
+
+
+Tout d'abord, en ce qui concerne (M), le modèle est réaliste car la différence de population sur une durée est modélisé par la différence entre le nombre de naissance et le nombre de morts qui sont représentés par $b \cdot N(t)$ et $d \cdot N(t)$. Par conséquent, les constantes b et d représentes le taux de natalité et de mortalité ( en pourcent). Donc \gamma est le taux d'accroisement de population (en pourcent). \\
+
+Ensuite, en ce qui concerne (V), Le modèle est juste une extension de l'équation (M). Pour le voir nous devons partir au comment elle fut créée. Nous partons de (M), sauf que ici nous posons b et d des fonctions affine de N 
+
+\begin{eqnarray}
+  b(N) & = & a_b\cdot N + b_b \nonumber \\
+  d(n) & = & a_d \cdot N + b_d \nonumber
+\end{eqnarray}
+
+on obtient
+\begin{eqnarray}
+  \frac{dN}{dt}(t) & = & N(t) \cdot (b(N(t))-d(N(t))) \nonumber \\
+  & = & N(t) \cdot (A \cdot N(t) + B) \nonumber \\
+  & = & A \cdot N(t) \cdot (1- \frac{N(t)}{K}) \nonumber
+\end{eqnarray}
+
+avec  $K = \frac{A}{B}$ \\
+
+\subsection{résolution des equations}
+
+Pour (M), on a affaire à une simple équation différentielle linéaire du premier ordre.
+\begin{eqnarray}
+  N(t) = \lambda \cdot  e^{\gamma \cdot t}
+\end{eqnarray}
+\newpage
+On remarque que quand $\gamma$ est negatif ( quand $b < d$) on a une décroissance jusqu'à tendre vers 0. Dans le contraire, on a une croissance sans limite. Cette modélisation pose donc certaines limite.
+\\
+\\
+Pour (V), nous avons aussi une equation différentielle linéaire du premier ordre en posant $Z = \frac{1}{N}$. \\
+On obtient, 
+
+\begin{eqnarray}
+  \frac{dZ}{dt}(t) & = & -\gamma \cdot(Z(t) - \frac{1}{K}) \nonumber & (V') \\
+  Z(t) & = & \lambda \cdot  e^{\gamma \cdot t} + \frac{1}{K} \nonumber
+\end{eqnarray}
+
+Ainsi,
+
+\begin{eqnarray}
+N(t) & = & \frac{k}{1+ \lambda \cdot  e^{\gamma \cdot t}}  
+\end{eqnarray}
+
+Avec $\lambda = \frac{K-N_0}{K}$ \\
+De plus, on peut remarquer que la constante K influe sur les variations de N(t).\\
+En effet,(avec $\gamma>0$ et vice versa quand $\gamma <0$) \begin{itemize}
+  \item Si $K > N_0$ alors la fonction sera croissante sur R et convergera vers K 
+    \item Si $K < N_0$ alors la fonction sera décroissante sur R et convergera vers K 
+      \item l'égalité donne une fonction constante 
+\end{itemize}
+En voici, un exemple avec $N_0 = 5$ et .\\
+
+
+\includegraphics[scale=0.5]{p1.png}
+
+\newpage
+
+\subsection{Présentation du modèle de Lotka-Volterra}
+
+On a \begin{eqnarray}
+  \left\{ \begin{array}{c}
+    \frac{dN}{dt}{t} =  N(t) \cdot (a - b \cdot P(t) \\
+    \frac{dP}{dt}{t}  =  P(t) \cdot (c \cdot P(t) -d)
+  \end{array} \nonumber & (LV)
+  \end{eqnarray}\\
+\\
+Nous avons en fait affaire à des equations de la forme de (V). la différence ici c'est que $\gamma$ est une fonction affine décroissante de P pour la première, et une fonction affine croissante pour l'autre. Ce qui peut se traduire par ' plus il y a de prédateur, plus l'accroissement de proie diminue et vice versa'.
+
+\subsection{Résolution du système différentielle}
+
+Les valeurs utilisées s'inspirent de données de la compagnie de la Baie d'Hudson, sur les populations de lièvres et de renards.
+
+
+\begin{tabular}{Rc}
+  \includegraphics[scale=0.45]{p2.png} & \includegraphics[scale=0.45]{p3.png} \\
+\end{tabular}
+
+
+En outre, en prenant les courbes calculés à partir de la méthode Runge Kutta 4( la plus précise), on peut voir apparaitre une periodicité d'environ 150. De plus, il existe un théorème nommé premiere loi de Volterra qui confirme cette hypothèse, et qui donne une periode de $\frac{2  \pi}{\sqrt ad}$. Néamoins, nous partirons du principale que nous connaissons pas cette formule et nous cherchons une valeur approchée. \\
+Une méthode serait de diviser l'air sous la courbe de P(t) (une méthode de Simpson) et de la diviser par la moyenne des valeurs obtenus. $T = frac{Aire}{Moyenne}$\\ 
+Cependant, les erreurs problèmes est de savoir où s'arrêter dans les calculs.
+\\
+
+D'autres part, Nous dénombrons deux points singuliers pour$(N(t), P(t))=(0,0)$ et $(\frac{d}{c}, \frac{a}{b})$
+\\
+Puis, nous pouvons voir le diagramme generale en partant de conditions initials différent des points singuliers. 
+\\
+\includegraphics[scale=0.5]{p5.png}
+
+\end{document}

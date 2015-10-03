@@ -1,0 +1,74 @@
+\documentclass{article}
+
+\usepackage[french]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{graphicx}
+
+%%%%%%%%%%%%%%%% Lengths %%%%%%%%%%%%%%%%
+\setlength{\textwidth}{15.5cm}
+\setlength{\evensidemargin}{0.5cm}
+\setlength{\oddsidemargin}{0.5cm}
+
+%%%%%%%%%%%%%%%% Variables %%%%%%%%%%%%%%%%
+\def\projet{0}
+\def\titre{Optimisation thermo-nucléaire contrôlée de la cuisson de la
+soupe aux choux}
+\def\groupe{0}
+\def\equipe{0}
+\def\responsible{aeinstei}
+\def\secretary{mcurie}
+\def\others{hlorentz, mplanck, nbohr}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%% Header %%%%%%%%%%%%%%%%
+\noindent\begin{minipage}{0.98\textwidth}
+  \vskip 0mm
+  \noindent
+  { \begin{tabular}{p{7.5cm}}
+      {\bfseries \sffamily
+        Projet n°\projet} \\ 
+      {\itshape \titre}
+    \end{tabular}}
+  \hfill 
+  \fbox{\begin{tabular}{l}
+      {~\hfill \bfseries \sffamily Groupe n°\groupe\ - Equipe n°\equipe
+        \hfill~} \\[2mm] 
+      Responsable : \responsible \\
+      Secrétaire : \secretary \\
+      Codeurs : \others
+    \end{tabular}}
+  \vskip 4mm ~
+
+  ~~~\parbox{0.95\textwidth}{\small \textit{Résumé~:} \sffamily Ce
+  projet consiste à mettre en place un mécanisme basé sur un
+  accélérateur de particules, afin de générer un trou noir permettant
+  de cuire une soupe aux choux par rayonnement Hawking. La première
+  partie décrit les détails de construction de l'accélérateur, tandis
+  que la seconde partie s'intéresse aux suites possibles de
+  l'ingestion de la soupe. }
+  \vskip 1mm ~
+\end{minipage}
+
+%%%%%%%%%%%%%%%% Main part %%%%%%%%%%%%%%%%
+\section*{Méthodes numériques de résolution d'équations différentielles}
+Dans un premier temps, nous avons implémenté les différentes méthodes de résolution d'équations différentielles ordinaires. La première étape était de représenter un problème de Cauchy. Il fallait donc définir une condition initiale, c'est-à-dire les coordonnées d'un point, et une équation, liant la dérivée première d'une fonction et son l'expression. Pour pouvoir développer cette représentation en dimension arbitraire, nous avons choisi de représenter les fonctions en vecteurs de fonctions, donc dans lesquelles chaque composante est une fonction.
+Les méthodes de résolution de ces problèmes sont dites à un pas, puisqu'il s'agit de calculer selon une estimation de la fonction donnée en un point, l'estimation sur le point suivant, donné par l'ajout d'un pas choisi au premier point. L'estimation peut varier selon les méthodes, basée sur la tangente pour la méthode d'Euler ou la méthode du point du milieu, ou encore une moyenne pondérée des pentes en plusieurs points pour les méthodes de Runge-Kutta et Heun.
+
+Le problème auquel nous avons été confrontés était la condition d'arrêt de la fonction meth\_epsilon. En effet, dès le premier tour de boucle, la différence entre les deux premières itérations étaient bien plus faibles que n'importe quel epsilon donné en paramètre. L'algorithme ne pouvant donc pas boucler, il ne renvoie donc que l'évaluation pour un pas. Pour cette raison, nous avons dû nous en passer dans les exemples donnés. Cela nous a amené à choisir arbitrairement un pas pour les méthodes de résolution, ce qui aurait dû être fait automatiquement selon la précision voulue.
+
+La première équation sur laquelle nous avons testé ces différentes méthodes est l'équation définie par $y(0) = 1$ et $y'(t) = \frac{y(t)}{1+t^2}$. Cette équation a pour solution la fonction $x \rightarrow exp(arctan(x))$, à titre comparatif.
+Tout d'abord, nous pouvons tracer le champ de tangentes donné par cette équation différentielle. Ce champ représente l'ensemble des solutions de l'équation différentielle. Ainsi, il suffit de choisir le point représentant la condition initiale de la solution, pour obtenir visuellement la solution unique passant par ce point, en se laissant guider par les tangentes.
+\begin{figure}[ht]
+  \begin{center}
+    \begin{tabular}{cc}
+      \includegraphics[scale=0.3]{Champ_Vectoriel} &
+      \includegraphics[scale=0.3]{Comparaison_test_eq_diff}
+    \end{tabular}   
+  \end{center}
+  \caption{Ensemble des solution de l'équation $y'(t) = \frac{y(t)}{1+t^2}$ et la solution passant par (0,1) et ses approximations}
+\end{figure}
+
+On remarque ici, que c'est la méthode d'Euler qui est la plus proche de la solution. Cela est dû au fait que nous utilisons une précision arbitraire pour tester les résolutions, comme expliqué précédemment.
+
+\end{document}
